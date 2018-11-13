@@ -56,10 +56,27 @@ public final class Program1Parse1 extends Program1 {
         assert tokens.length() > 0 && tokens.front().equals("INSTRUCTION") : ""
                 + "Violation of: <\"INSTRUCTION\"> is proper prefix of tokens";
 
-        // TODO - fill in body
-
-        // This line added just to make the program compilable.
-        return null;
+         // dequeue instruction
+        tokens.dequeue();
+        String name = tokens.dequeue();
+        //dequeue is
+        String temp=tokens.dequeue();
+        boolean is = temp.equals("IS");
+        Reporter.assertElseFatalError(is, "Error: Invalid instruction. Expected: " + "\"IS\" token");
+        
+        body.parseBlock(tokens);
+        
+        //dequeue end
+        temp=tokens.dequeue();  
+        boolean end = temp.equals("END");
+        Reporter.assertElseFatalError(end, "Error: Invalid instruction. Expected: " + "\"END\" token");
+        
+      //dequeue end name
+        temp=tokens.dequeue();  
+        boolean sameName = temp.equals(name);
+        Reporter.assertElseFatalError(sameName, "Error: Expected name to match");
+        
+        return name;
     }
 
     /*
