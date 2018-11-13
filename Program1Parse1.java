@@ -108,7 +108,31 @@ public final class Program1Parse1 extends Program1 {
         assert tokens.length() > 0 : ""
                 + "Violation of: Tokenizer.END_OF_INPUT is a suffix of tokens";
 
-        // TODO - fill in body
+        Set<String> names = new Set2<String>();
+        Map<String, Statement> context = this.newContext();
+        Statement body = this.newBody();
+        
+        //dequeue program
+        String temp = tokens.dequeue();
+        boolean isProgram = temp.equals("PROGRAM");
+        Reporter.assertElseFatalError(isProgram, "Error: Invalid instruction. Expected: " + "\"PROGRAM\" token");
+        
+      //dequeue name
+        temp = tokens.dequeue();
+        boolean isName = Tokenizer.isIdentifier(temp);
+        Reporter.assertElseFatalError(isName, "Error: Expected identifier");
+
+      //dequeue is
+        temp=tokens.dequeue();
+        boolean is = temp.equals("IS");
+        Reporter.assertElseFatalError(is, "Error: Invalid instruction. Expected: " + "\"IS\" token");
+        
+        boolean validInstruction = tokens.front().equals("INSTRUCTION");
+        
+        while(validInstruction)
+        {
+            
+        }
 
     }
 
