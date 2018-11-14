@@ -1,11 +1,15 @@
+import components.map.Map;
 import components.program.Program;
 import components.program.Program1;
 import components.queue.Queue;
+import components.set.Set;
+import components.set.Set2;
 import components.simplereader.SimpleReader;
 import components.simplereader.SimpleReader1L;
 import components.simplewriter.SimpleWriter;
 import components.simplewriter.SimpleWriter1L;
 import components.statement.Statement;
+import components.utilities.Reporter;
 import components.utilities.Tokenizer;
 
 /**
@@ -56,26 +60,30 @@ public final class Program1Parse1 extends Program1 {
         assert tokens.length() > 0 && tokens.front().equals("INSTRUCTION") : ""
                 + "Violation of: <\"INSTRUCTION\"> is proper prefix of tokens";
 
-         // dequeue instruction
+        // dequeue instruction (assert already checks)
         tokens.dequeue();
         String name = tokens.dequeue();
-        //dequeue is
-        String temp=tokens.dequeue();
+
+        //check/dequeue is
+        String temp = tokens.dequeue();
         boolean is = temp.equals("IS");
-        Reporter.assertElseFatalError(is, "Error: Invalid instruction. Expected: " + "\"IS\" token");
-        
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid instruction. Expected: " + "\"IS\" token");
+
         body.parseBlock(tokens);
-        
-        //dequeue end
-        temp=tokens.dequeue();  
+
+        //check/dequeue end
+        temp = tokens.dequeue();
         boolean end = temp.equals("END");
-        Reporter.assertElseFatalError(end, "Error: Invalid instruction. Expected: " + "\"END\" token");
-        
-      //dequeue end name
-        temp=tokens.dequeue();  
+        Reporter.assertElseFatalError(end,
+                "Error: Invalid instruction. Expected: " + "\"END\" token");
+
+        //check/dequeue end name
+        temp = tokens.dequeue();
         boolean sameName = temp.equals(name);
-        Reporter.assertElseFatalError(sameName, "Error: Expected name to match");
-        
+        Reporter.assertElseFatalError(sameName,
+                "Error: Expected name to match");
+
         return name;
     }
 
@@ -107,33 +115,74 @@ public final class Program1Parse1 extends Program1 {
         assert tokens != null : "Violation of: tokens is not null";
         assert tokens.length() > 0 : ""
                 + "Violation of: Tokenizer.END_OF_INPUT is a suffix of tokens";
-
         Set<String> names = new Set2<String>();
         Map<String, Statement> context = this.newContext();
         Statement body = this.newBody();
-        
-        //dequeue program
+
+        //check/dequeue program
         String temp = tokens.dequeue();
         boolean isProgram = temp.equals("PROGRAM");
-        Reporter.assertElseFatalError(isProgram, "Error: Invalid instruction. Expected: " + "\"PROGRAM\" token");
-        
-      //dequeue name
-        temp = tokens.dequeue();
-        boolean isName = Tokenizer.isIdentifier(temp);
+        Reporter.assertElseFatalError(isProgram,
+                "Error: Invalid instruction. Expected: " + "\"PROGRAM\" token");
+
+        //check/dequeue name
+        String name = tokens.dequeue();
+        boolean isName = Tokenizer.isIdentifier(name);
         Reporter.assertElseFatalError(isName, "Error: Expected identifier");
 
-      //dequeue is
-        temp=tokens.dequeue();
+        //check/dequeue is
+        temp = tokens.dequeue();
         boolean is = temp.equals("IS");
-        Reporter.assertElseFatalError(is, "Error: Invalid instruction. Expected: " + "\"IS\" token");
-        
-        boolean validInstruction = tokens.front().equals("INSTRUCTION");
-        
-        while(validInstruction)
-        {
-            
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid instruction. Expected: " + "\"IS\" token");
+
+        boolean isInstruction = tokens.front().equals("INSTRUCTION");
+
+        //parsing instructions
+        while (isInstruction) {
+            Statement bodyBlock = body.newInstance();
+            String instructionName = parseInstruction(tokens, bodyBlock);
+            boolean validInstruction = (!(instructionName.equals("move")
+                    || instructionName.equals("turnright")
+                    || instructionName.equals("turnleft")
+                    || instructionName.equals("skip")
+                    || instructionName.equals("infect")));
+
+            Reporter.assertElseFatalError(validInstruction,
+                    "Error: Invalid Instruction");
+
+            if (names.contains(instructionName)) {
+                Reporter.assertElseFatalError(false, "Error: ");
+            } else {
+                names.add(instructionName);
+            }
+            context.add(instructionName, bodyBlock);
+            isInstruction = tokens.front().equals("INSTRUCTION");
+
         }
 
+        //parsing body
+
+        tokens.dequeue();
+        body.parseBlock(tokens);
+
+        //check/dequeue end
+        String end = tokens.dequeue();
+        boolean isEnd = end.equals("END");
+        Reporter.assertElseFatalError(isEnd, "Error: Expected END");
+
+        String endName = tokens.dequeue();
+        boolean sameName = name.equals(endName);
+        Reporter.assertElseFatalError(sameName, "Error: Names do not match");
+
+        //reassemble
+        this.replaceBody(body);
+        this.replaceContext(context);
+        this.replaceName(name);
+
+        //check that tokens is at end
+        boolean isOver = tokens.front().equals(Tokenizer.END_OF_INPUT);
+        Reporter.assertElseFatalError(isOver, "Error: Invalid ending syntax");
     }
 
     /*
