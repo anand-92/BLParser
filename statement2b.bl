@@ -1,0 +1,12 @@
+IF next-is-not-enemy THEN
+  move
+  infect
+WHILE true DO
+  move
+END WHILE
+    go-for-it
+    turnright
+    look-for-something
+END IF
+ELSE
+
