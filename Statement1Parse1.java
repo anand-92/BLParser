@@ -5,13 +5,14 @@ import components.simplewriter.SimpleWriter;
 import components.simplewriter.SimpleWriter1L;
 import components.statement.Statement;
 import components.statement.Statement1;
+import components.utilities.Reporter;
 import components.utilities.Tokenizer;
 
 /**
  * Layered implementation of secondary methods {@code parse} and
  * {@code parseBlock} for {@code Statement}.
  *
- * @author Put your name here
+ * @author Nik Anand and Hudson Arledge
  *
  */
 public final class Statement1Parse1 extends Statement1 {
@@ -63,7 +64,52 @@ public final class Statement1Parse1 extends Statement1 {
         assert tokens.length() > 0 && tokens.front().equals("IF") : ""
                 + "Violation of: <\"IF\"> is proper prefix of tokens";
 
-        // TODO - fill in body
+        Statement ifBlock = s.newInstance();
+        Statement elseBlock = s.newInstance();
+        //check IF token
+        String token = tokens.dequeue();
+        boolean is = token.equals("IF");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: " + "\"IF\" token");
+        //check condition token
+        token = tokens.dequeue();
+        is = Tokenizer.isCondition(token);
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: condition token");
+        Condition c = parseCondition(token);
+        //check THEN token
+        token = tokens.dequeue();
+        is = token.equals("THEN");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: " + "\"THEN\" token");
+        //parse if block
+        ifBlock.parseBlock(tokens);
+
+        //check for if the next token is ELSE
+        token = tokens.dequeue();
+        boolean isElse = false;
+        is = token.equals("ELSE");
+        if (is) {
+            //parse else block and get next token
+            isElse = true;
+            elseBlock.parseBlock(tokens);
+            token = tokens.dequeue();
+        }
+        //check END token
+        is = token.equals("END");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid instruction. Expected: " + "\"END\" token");
+        //check IF token
+        token = tokens.dequeue();
+        is = token.equals("IF");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid instruction. Expected: " + "\"IF\" token");
+        //assemble either an if-else or an if based on boolean isElse
+        if (isElse) {
+            s.assembleIfElse(c, ifBlock, elseBlock);
+        } else {
+            s.assembleIf(c, ifBlock);
+        }
 
     }
 
@@ -93,9 +139,36 @@ public final class Statement1Parse1 extends Statement1 {
         assert s != null : "Violation of: s is not null";
         assert tokens.length() > 0 && tokens.front().equals("WHILE") : ""
                 + "Violation of: <\"WHILE\"> is proper prefix of tokens";
-
-        // TODO - fill in body
-
+        Statement whileBlock = s.newInstance();
+        //check IF token
+        String token = tokens.dequeue();
+        boolean is = token.equals("WHILE");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: " + "\"WHILE\" token");
+        //check condition token
+        token = tokens.dequeue();
+        is = Tokenizer.isCondition(token);
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: condition token");
+        Condition c = parseCondition(token);
+        //check DO token
+        token = tokens.dequeue();
+        is = token.equals("DO");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: " + "\"DO\" token");
+        //parse while block
+        whileBlock.parseBlock(tokens);
+        //check END token
+        token = tokens.dequeue();
+        is = token.equals("END");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: " + "\"END\" token");
+        //check WHILE token
+        token = tokens.dequeue();
+        is = token.equals("WHILE");
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: " + "\"WHILE\" token");
+        s.assembleWhile(c, s);
     }
 
     /**
@@ -120,8 +193,11 @@ public final class Statement1Parse1 extends Statement1 {
         assert tokens.length() > 0
                 && Tokenizer.isIdentifier(tokens.front()) : ""
                         + "Violation of: identifier string is proper prefix of tokens";
-
-        // TODO - fill in body
+        String token = tokens.dequeue();
+        boolean is = Tokenizer.isIdentifier(token);
+        Reporter.assertElseFatalError(is,
+                "Error: Invalid token. Expected: identifier token");
+        s.assembleCall(token);
 
     }
 
@@ -146,8 +222,14 @@ public final class Statement1Parse1 extends Statement1 {
         assert tokens.length() > 0 : ""
                 + "Violation of: Tokenizer.END_OF_INPUT is a suffix of tokens";
 
-        // TODO - fill in body
-
+        String token = tokens.front();
+        if (token.equals("IF")) {
+            parseIf(tokens, this);
+        } else if (token.equals("WHILE")) {
+            parseWhile(tokens, this);
+        } else {
+            parseCall(tokens, this);
+        }
     }
 
     @Override
@@ -156,8 +238,13 @@ public final class Statement1Parse1 extends Statement1 {
         assert tokens.length() > 0 : ""
                 + "Violation of: Tokenizer.END_OF_INPUT is a suffix of tokens";
 
-        // TODO - fill in body
-
+        Statement s = this.newInstance();
+        int pos = 0;
+        while (tokens.front() != Tokenizer.END_OF_INPUT) {
+            s.parse(tokens);
+            this.addToBlock(pos, s);
+            pos++;
+        }
     }
 
     /*
