@@ -4,9 +4,6 @@ IF next-is-not-enemy THEN
 WHILE true DO
   move
 END WHILE
-    go-for-it
     turnright
-    look-for-something
-END IF
-ELSE
+END-OF IF
 
