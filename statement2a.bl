@@ -3,7 +3,6 @@ WHILE true DO
   IF random THEN
     turnleft
     infect
-  END IF
+  END IFFFFF
   skip
 END WHILE
-text after
